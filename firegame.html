@@ -29,7 +29,8 @@ var score = 0
 var player = { //attempting to create an actual object with its own array
     
     breadth: playerScale*canvas.width,
-    movementSpeed: canvas.width/50,
+    dx: canvas.width/50,
+    dy: canvas.width/50,
     x: canvas.width/2,
     y: (canvas.height - canvas.height/10) - playerScale*canvas.width,
     
@@ -99,6 +100,7 @@ function keyDownHandler(e) {
             }
             if(e.keyCode == 38) {
                 upPressed = true;
+                player.direction = "up";
                 player.moving = true;
             }
             if(e.keyCode == 40) {
@@ -110,59 +112,65 @@ function keyDownHandler(e) {
 function keyUpHandler(e) {
     if(e.keyCode == 39) {
         rightPressed = false;
-        movementSpeed = canvas.width/200;
+        player.direction = null;
         player.moving = false;
         
     }
     if(e.key == "Left" || e.key == "ArrowLeft") {
         leftPressed = false;
-        movementSpeed = canvas.width/200;
+        player.direction = null;
         player.direction = null;
         player.moving = false;
     }
     if(e.key == "Up" || e.key == "ArrowUp") {
         upPressed = false;
-        movementSpeed = canvas.width/200;
+        player.direction = null;
         player.moving = false;
     }
     if(e.keyCode == 40){
         downPressed = false;
-        movementSpeed = canvas.width/200;
+        player.direction = null;
         player.moving = false;
     }
 }
 
-function collisionDetection() {  
+function collisionDetection() {  //MovementSpeed needs to be split into x and y vector components!!!
 // the below stuff keeps our player within the bounds of the map.
    
 
-    if (player.x - player.movementSpeed < 0 ) {player.x =0;} 
-    if (player.x + player.movementSpeed > canvas.width - playerScale * canvas.width ) {player.x = canvas.width - playerScale * canvas.width;}
-    if (player.y + player.movementSpeed > canvas.height - playerScale * canvas.width ) {player.y = canvas.height - playerScale * canvas.width;}
-    if (player.y - player.movementSpeed < 0 ) {player.y = 0;}
+    if (player.x - player.dx < 0 ) {player.x =0;} 
+    if (player.x + player.dx > canvas.width - playerScale * canvas.width ) {player.x = canvas.width - playerScale * canvas.width;}
+    if (player.y + player.dy > canvas.height - playerScale * canvas.width ) {player.y = canvas.height - playerScale * canvas.width;}
+    if (player.y - player.dy < 0 ) {player.y = 0;}
 
 //the below stuff keeps it from hitting the "fire"
 
-    if (
-        player.x - player.movementSpeed < fire.x + fire.breadth &&
+    if (                                                                //from the right!
+        player.x - player.dx < fire.x + fire.breadth &&
         player.y < fire.y + fire.breadth &&
         player.y + playerScale*canvas.width > fire.y &&
         player.direction == "left" &&
-        player.moving == true) {collided = true;} 
+        leftPressed == true) {collided = true;} 
 
-    else if (
-        player.x + playerScale*canvas.width + player.movementSpeed > fire.x &&
+    else if (                                                       //from the left!
+        player.x + player.breadth + player.dx > fire.x &&
         player.y < fire.y + fire.breadth &&
-        player.y + playerScale*canvas.width > fire.y &&
+        player.y + player.breadth > fire.y &&
         player.direction == "right" &&
-        player.moving == true) {collided = true;} 
+        rightPressed == true) {collided = true;} 
         
 
-    else if (
+    else if (                                                       //from the bottom!
         player.y - player.movementSpeed > fire.y + fire.breadth &&
         player.x > fire.x &&
-        player.x + player.breadth < fire.x + fire.breadth &&
-        player.moving == true) {collided = true}
+        player.x  < fire.x + fire.breadth &&
+        player.direction == "up") {collided = true;}
+/*
+    else if (
+        player.y + player.movementSpeed + player.breadth < fire.y &&
+        player.x + player.movementSpeed > fire.x &&
+        player.x + player.movementSpeed - player.breadth < fire.x) {collided = true;}
+    */
     else {collided = false;}
 
     
@@ -174,15 +182,11 @@ function draw() {
 
     ctx.clearRect(0,0, canvas.width, canvas.height);
 
-/*if (collided == true) {
-        for (let i = 0; i < 1; step++) { // only creating/destroying one fire at a time
-            fires[i] = Object.create(fire)
-            fires[i].x = Math.floor(Math.random() * (canvas.width ));
-            fires[i].y = Math.floor(Math.random() * (canvas.width ));
-            drawfires(i);
-            collided = false;
- 
-        }
+    /*for (let i = 0; i < score; i++) {
+
+        fires[i+1] = Object.create(fire);
+        fires[i+1].moveFire();
+        
 
         }*/
 
@@ -192,15 +196,16 @@ function draw() {
         score += 1
         }
     ctx.font = "30px Arial";    
-    ctx.fillText("score " + score, 10, 50);
+    ctx.fillText("score " + score + " " + player.direction + " ", 10, 50);
     
     drawPlayer();
     fire.drawFire();
     collisionDetection();
-    if(rightPressed ) {player.x += player.movementSpeed; }
-    if(leftPressed ) {player.x -= player.movementSpeed;}
-    if(upPressed) {player.y -= player.movementSpeed;}
-    if(downPressed) {player.y += player.movementSpeed;}
+    
+    if(rightPressed ) {player.x += player.dx; }
+    if(leftPressed ) {player.x -= player.dx;}
+    if(upPressed) {player.y -= player.dy;}
+    if(downPressed) {player.y += player.dy;}
 
     //if(playerX == 0 || playerY == 0) {movementSpeed = canvas.width/200}
 }
