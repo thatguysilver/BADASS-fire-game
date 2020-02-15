@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+</head>
+<body>
+    <canvas id = "myCanvas" height=500 width = 500 style="border:2px solid black";> </canvas>
+
+<script>
+
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+var playerScale = .02 // * by canvas height and width to create the player size.
+
+
+//var movementSpeed = canvas.width/200
+
+var rightPressed = null; // removing this does shitty things. i have no idea why it works.
+var downPressed = null;
+var leftPressed = null;
+var upPressed = null;
+
+var collided = false;
+var fires = []
+
+var score = 0
+var player = { //attempting to create an actual object with its own array
+    
+    breadth: playerScale*canvas.width,
+    movementSpeed: canvas.width/50,
+    x: canvas.width/2,
+    y: (canvas.height - canvas.height/10) - playerScale*canvas.width,
+    
+    direction: null,
+    moving: false
+
+    //xRight: this.x + canvas.width,
+    //yRight: this.y + canvas.width
+
+    
+}
+
+var fire = {
+    breadth: 20,
+    x: Math.floor(Math.random() * (canvas.width )),
+    y: Math.floor(Math.random() * (canvas.height )),
+    xRight: this.x + this.breadth, // does not work for no reason
+    yRight: this.y + this.breadth,
+
+    drawFire: function() {
+        ctx.beginPath();
+        ctx.rect(this.x, this.y, this.breadth, this.breadth);
+        ctx.stroke();
+    },
+
+    move: function() {
+
+        this.x = Math.floor(Math.random() * (canvas.width )),
+        this.y = Math.floor(Math.random() * (canvas.height ))
+        /*Object.create(fire);
+        ctx.beginPath();
+        ctx.rect(Math.floor(Math.random() * (canvas.width )), Math.floor(Math.random() * (canvas.height )), this.breadth, this.breadth);
+        ctx.stroke();*/
+    }
+}
+
+function drawPlayer() {
+
+
+    ctx.beginPath();
+    ctx.rect(player.x, player.y, player.breadth, player.breadth);
+    ctx.stroke();
+
+}
+function drawFire() {
+    ctx.beginPath();
+    ctx.rect(fire.x, fire.y, fire.breadth, fire.breadth);
+    ctx.stroke();
+}
+/*function drawfires(x){
+    ctx.beginPath();
+    ctx.rect(fires[x].x, fires[x].y, fires[x].breadth, fires[x].breadth);
+    ctx.stroke();
+}*/
+
+function keyDownHandler(e) {
+            
+            if(e.key == "Right" || e.key == "ArrowRight") {
+                rightPressed = true;
+                player.direction = "right";
+                player.moving = true;
+            }
+            if(e.key == "Left" || e.key == "ArrowLeft") {
+                leftPressed = true;
+                player.direction = "left";
+                player.moving = true;
+            }
+            if(e.keyCode == 38) {
+                upPressed = true;
+                player.moving = true;
+            }
+            if(e.keyCode == 40) {
+                downPressed = true;
+                player.moving = true;
+            }
+        }
+        
+function keyUpHandler(e) {
+    if(e.keyCode == 39) {
+        rightPressed = false;
+        movementSpeed = canvas.width/200;
+        player.moving = false;
+        
+    }
+    if(e.key == "Left" || e.key == "ArrowLeft") {
+        leftPressed = false;
+        movementSpeed = canvas.width/200;
+        player.direction = null;
+        player.moving = false;
+    }
+    if(e.key == "Up" || e.key == "ArrowUp") {
+        upPressed = false;
+        movementSpeed = canvas.width/200;
+        player.moving = false;
+    }
+    if(e.keyCode == 40){
+        downPressed = false;
+        movementSpeed = canvas.width/200;
+        player.moving = false;
+    }
+}
+
+function collisionDetection() {  
+// the below stuff keeps our player within the bounds of the map.
+   
+
+    if (player.x - player.movementSpeed < 0 ) {player.x =0;} 
+    if (player.x + player.movementSpeed > canvas.width - playerScale * canvas.width ) {player.x = canvas.width - playerScale * canvas.width;}
+    if (player.y + player.movementSpeed > canvas.height - playerScale * canvas.width ) {player.y = canvas.height - playerScale * canvas.width;}
+    if (player.y - player.movementSpeed < 0 ) {player.y = 0;}
+
+//the below stuff keeps it from hitting the "fire"
+
+    if (
+        player.x - player.movementSpeed < fire.x + fire.breadth &&
+        player.y < fire.y + fire.breadth &&
+        player.y + playerScale*canvas.width > fire.y &&
+        player.direction == "left" &&
+        player.moving == true) {collided = true;} 
+
+    else if (
+        player.x + playerScale*canvas.width + player.movementSpeed > fire.x &&
+        player.y < fire.y + fire.breadth &&
+        player.y + playerScale*canvas.width > fire.y &&
+        player.direction == "right" &&
+        player.moving == true) {collided = true;} 
+        
+
+    else if (
+        player.y - player.movementSpeed > fire.y + fire.breadth &&
+        player.x > fire.x &&
+        player.x + player.breadth < fire.x + fire.breadth &&
+        player.moving == true) {collided = true}
+    else {collided = false;}
+
+    
+}
+
+    
+
+function draw() {
+
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+
+/*if (collided == true) {
+        for (let i = 0; i < 1; step++) { // only creating/destroying one fire at a time
+            fires[i] = Object.create(fire)
+            fires[i].x = Math.floor(Math.random() * (canvas.width ));
+            fires[i].y = Math.floor(Math.random() * (canvas.width ));
+            drawfires(i);
+            collided = false;
+ 
+        }
+
+        }*/
+
+    if(collided == true) {
+
+        fire.move();
+        score += 1
+        }
+    ctx.font = "30px Arial";    
+    ctx.fillText("score " + score, 10, 50);
+    
+    drawPlayer();
+    fire.drawFire();
+    collisionDetection();
+    if(rightPressed ) {player.x += player.movementSpeed; }
+    if(leftPressed ) {player.x -= player.movementSpeed;}
+    if(upPressed) {player.y -= player.movementSpeed;}
+    if(downPressed) {player.y += player.movementSpeed;}
+
+    //if(playerX == 0 || playerY == 0) {movementSpeed = canvas.width/200}
+}
+document.addEventListener("keydown", keyDownHandler, false);
+document.addEventListener("keyup", keyUpHandler, false);
+
+
+var interval = setInterval(draw, 16.666667); // 16.6 recurring is 60hz in ms
+
+</script>
+</body>
+</html>
